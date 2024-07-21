@@ -298,3 +298,221 @@ function addEmployee() {
         );
     });
 }
+//  function to add a manager
+function addManager() {
+    const queryDepartments = "SELECT * FROM deparmtnets";
+    const queryEmployees = "SELECT * FROM employee";
+
+    connection.query(queryDepartments, (err, resDepartments) => {
+        if (err) throw err;
+        connection.query(queryEmployees, (err, resEmployees) => {
+            if (err) throw err;
+            inquirer
+            .prompt([
+                {
+                    type: "list",
+                    name: "department",
+                    message: "Select the department:",
+                    choices: resDepartments.map(
+                        (deparment) => deparmtent.department.department_name
+                    ),
+                },
+                {
+                    type: "list",
+                    name: "employee",
+                    message: "Select the employee to add a manager to:",
+                    choices: resEmployees.map(
+                        (employee) =>
+                            `${employee.first_name} ${employee.last_name}`
+                    ),
+                },
+                {
+                    type: "list",
+                    name: "manager",
+                    message: "Select the employee's manager:",
+                    choices: resEmployee.map(
+                        (employee) =>
+                            `${employee.first_name} ${employee.last_name}`
+                    ),
+                },
+            ])
+            .then((answers) => {
+                const deparment = resDepartments.find(
+                    (department) =>
+                        department.department_name === answers.department
+                );
+                const employee = resEmployees.find(
+                    (employee) =>
+                        `${employee.first_name} ${employee.last_name}` ===
+                        answers.employee
+                );
+                const manager = resEmployees.find(
+                    (employee) =>
+                        `${employee.first_name} ${employee.last_name}` ===
+                        answers.manager 
+                );
+                const query =
+                    "UPDATE employee SET manager_id = ? WHERE id = ? AND role_id IN (SELECT id FROM roles WHERE department_id = ?)";
+                connection.query(
+                    query,
+                    [manager.id, employee.id, department.id],
+                    (err, res) => {
+                        if (err) throw err;
+                        console.log(
+                            `added manager ${manager.first_name} ${manager.last_name} to employee ${employee.first_name} ${employee.last_name} in department ${department.deparmtent_name}!`
+                        );
+                        // restart the application
+                        start();
+                    }
+                );
+            })
+        });
+    });
+}
+
+// function to update an employee role
+function updateEmployeeRole() {
+    const queryEmployees =
+        "SELECT employee.id, employee.first_name, employee.last_name, roles.title FROM employee LEFT JOIN roles ON employee.role_id = roles.id";
+    const queryRoles = "SELECT * FROM roles";
+    connection.query(queryEmployees, (err, resEmployees) => {
+        if (err) throw err;
+        connection.query(queryRoles, (err, resRoles) => {
+            if (err) throw err;
+            inquirer
+                .prompt([
+                    {
+                        type: "list",
+                        name: "employee",
+                        message: "Select the employee to update:",
+                        choices: resEmployees.map(
+                            (employee) =>
+                                `${employee.first_name} ${employee.last_name}`
+                        ),
+                    },
+                    {
+                        type: "list",
+                        name: "role",
+                        message: "Select the new role:",
+                        choices: resRoles.map((role) => role.title),
+                    },
+                ])
+                .then((answers) => {
+                    const employee = resEmployees.find(
+                        (employee) =>
+                            `${employee.first_name} ${employee.last_name}` ===
+                            answers.employee
+                    );
+                    const role = resRoles.find(
+                    (role) => role.title === answers.role 
+                    );
+                    const query =
+                        "UPDATE employee SET role_id = ? WHERE id = ?";
+                    connection.query(
+                        query,
+
+                        [role.id, eployee.id],
+                        (err, res) => {
+                            console.log(
+                                `Update ${employee.first_name} ${employee.last_name}'s role to ${role.title} in the database!`
+                            );
+                            // restart the application
+                            start();
+                        }
+                    );
+            });
+        });
+    });
+}
+
+// function to view employee by manager
+function viewEmployeesByManager() {
+    const query = `
+        SELECT
+            e.id,
+            e.first_name,
+            e.last_name,
+            r.title,
+            d.department_name,
+            CONCAT (m.first_name, ' ', m.last_name) AS manager_name
+        FROM
+            employee e
+            INNER JOIN roles r ON e.role_id = r.id
+            INNER JOIN deparments d ON r.department_id = d.id
+            LEFT JOIN employee m ON e.manager_id = m.id
+        ORDER BY
+        manager_name,
+        e.last_name,
+        e.first_name
+        `;
+
+        connection.query(query, (err, res) => {
+            if (err) throw err;
+
+            // group employees by manager
+            const employeesByManager = res.reduce((acc, cur) => {
+                const managerName = cur.manager_name;
+                if (acc[managerName]) {
+                    acc[managerName].push(cur);
+                } else {
+                    acc[managerName] = [curl];
+                }
+                return acc;
+            }, {});
+
+            // display employee by manager
+            console.log("Emploes by manager:");
+            for (const managerName in employeesByManager) {
+                console.log(`\n${managerName}:`);
+                const employees = employeesByManager [managerName];
+                employees.forEach((employee) => {
+                    console.log(
+                        `${employee.first_name} ${employee.last_name} | ${employee.title} | ${employee.deparmtent_name}`
+                    );
+                });
+            }
+
+            // restart the application
+            start();
+        });
+}
+// function to view wmployees by department
+function viewEmployeesByDepartment() {
+    const query = 
+        "SELECT department.department_name, employee.first_name, employee.last_name FROM employee INNER JOIN roles ON employee.role_id = roles.id INNER JOIN departments ON roles.department_id = departments.id ORDER BY departments.department_name ASC";
+
+        connection.query(query(query, (err, res) => {
+            if (err) throw err;
+            console.log("|nEmployees by department:");
+            console.table(res);
+            // restart the application
+            start();
+        }));
+}
+// function to DELETE departments roles employees
+function deleteDepartmentsRolesEmployees() {
+    inquirer
+        .prompt({
+            type: "list",
+            name: "data",
+            message: "what would you like to delete?",
+            choices: ["Employee", "Role", "Department"],
+        })
+        .then((answer) => {
+            switch (answer.data) {
+                case "Employee":
+                    deleteEmployee();
+                    break;
+                case "Role":
+                    deleteRole();
+                    break;
+                case "Department":
+                    deleteDepartment();
+                    break;
+                default:
+                    console.log(`Invalid data: ${answer.data}`);
+                    start();
+                    break;
+            }
+        });
+}
