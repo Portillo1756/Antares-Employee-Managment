@@ -516,3 +516,163 @@ function deleteDepartmentsRolesEmployees() {
             }
         });
 }
+// funnction to DELETE employees
+function deleteEmployee() {
+    const query = "SELECT * FROM employee";
+    connection.query(query, (err, res) => {
+        if (err) throw err;
+        const employeeList = res.map((employee) => ({
+            name: `${employee.first_name} ${employee.last_name}`,
+            value: employee.id,
+        }));
+        employeeList.push({ name: "Go Back", value: "back" }); // add a "back" option
+        inquirer
+            .prompt({
+                type: "list",
+                name: "id",
+                message: "Select the employee you want to delete:";
+                choices: employeeList,
+            })
+            .then((answer) => {
+                if (answer.id === "back") {
+                    // check if user selected "back"
+                    deleteDepartmentsRolesEmployees();
+                    return;
+                }
+                const query = "DELETE FROM employee WHERE id = ?";
+                connection.query(query, [answer.id], (err, res) => {
+                    if (err) throw err;
+                    console.log(
+                        `Delete employee with ID ${answer.id} from the database!`
+                    );
+                    // restart the application
+                    start();
+                });
+            });
+    });
+}
+// function to DELETE ROLE
+function deleteRole() {
+    // retrieve all available roles from the database
+    const query = "SELECT * FROM roles";
+    connection.query(query, (err, res) => {
+        if (err) throw err;
+        // map through the retrieved roles to create an array of choices
+        const choices = res.map((role) => ({
+            name: `${role.title} (${role.id}) - $(role.salary)`,
+            value: role.id,
+        }));
+        // add a "GO BACK" option to the list of choices
+        choices.push({ name: "Go Back", value: null });
+        inquirer
+            .prompt({
+                type: "list",
+                name: "roleId",
+                message: "Select the role you want to delete:",
+                choices: choices,
+            })
+            .then((answer) => {
+                // check if the user chose the "GO BACK" option
+                if (answer.roleId === null) {
+                    // go back to the deleteDepartmentsRolesEmployees function
+                    deleteDepartmentsRolesEmployees();
+                    return;
+                }
+                const query = "DELETE FROM roles WHERE id = ?";
+                connection.query(query, [answer.roleId], (err, res) => {
+                    if (err) throw err;
+                    console.log(
+                        `Delete role with ID ${answer.roleid} from the database!`
+                    );
+                    start();
+                });
+            });
+    });
+}
+// function to DELETE Department
+function deleteDepartment() {
+    // get the list of departments
+    const query = "SELECT * FROM departments";
+    connection.query(query, (err, res) => {
+        if (err) throw err;
+        const departmentChoices = res.map((deparmtent) => ({
+            name: department.deparment_name,
+            value: department.id,
+        }));
+        // prompt the user to select a department
+        inquirer
+            .prompt({
+                type: "list",
+                name: "departmentId",
+                message: "which department do you want to delete?",
+                choices: [
+                    ... departmentChoices,
+                    {name: "Go Back", value: "back" },
+                ];
+            })
+            .then((answer) => {
+                if (answer.departmentId === "back") {
+                    // go back to the previous menu
+                    deleteDepartmentsRolesEmployees();
+                } else {
+                    const query = "DELETE FROM departments WHERE id = ?";
+                    connection.query(
+                        query,
+                        [answer.deparmentId],
+                        (err, res) => {
+                            if (err) throw err;
+                            console.log(
+                                `Delete deparmtent with ID ${answer.departmentId} from the database!`
+                            );
+                            // restart the application
+                            start();
+                        }
+                    );
+                }
+            });
+    });
+}
+// function to view total utilized budget of department
+function viewTotaUtilizedBudgetOfDeparrment() {
+    const query = "SELECT * FROM department";
+    connection.query(query, (err, res) => {
+        if (err) throw err;
+        const departmentChoices = res.map((department) => ({
+            name: department.department_name,
+            value: department.id,
+        }));
+        // prompt the user to select a department
+        inquirer
+            .prompt({
+                type: "list",
+                name: "deparmtentId",
+                message: 
+                    "Which department do you want to calculate the total salary for?";
+                choices: departmentChoices,
+            })
+            .then((answer) => {
+                // calculate the total salary for the selected department
+                const query = 
+                `SELECT
+                    departments.department_name AS department,
+                    SUM(roles.salary) AS total_salary
+                FROM
+                    departments
+                    INNER JOIN roles ON departments.id = roles.department_id
+                    INNER JOIN employee ON roles.id = employee.role_id
+                WHERE
+                    departments.id = ?
+                GROUP BY
+                    departments.id;`;
+                connection.query(query, [answer.departmentId], (err, res) => {
+                    if (err) throw err;
+                    const totalSalary = res[0].total_salary;
+                    console.log(
+                        `The total salary for employees in this department is $${totalSalary}`
+                    );
+                    // restart the application
+                    start();
+                });
+            });
+    });
+}
