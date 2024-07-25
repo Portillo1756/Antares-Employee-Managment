@@ -1,15 +1,5 @@
 const inquirer = require("inquirer");
-const mysql = require("mysql2");
 const cfonts = require('cfonts');
-
-// creating my sql connection
-const connection = mysql.createConnection({
-    host: "localhost",
-    port: 3006,
-    user: "root",
-    password: "",
-    database: "employeeTracker_db",
-});
 
 // connect to the database
 connection.connect((err) => {
@@ -530,7 +520,7 @@ function deleteEmployee() {
             .prompt({
                 type: "list",
                 name: "id",
-                message: "Select the employee you want to delete:";
+                message: "Select the employee you want to delete:",
                 choices: employeeList,
             })
             .then((answer) => {
@@ -608,7 +598,7 @@ function deleteDepartment() {
                 choices: [
                     ... departmentChoices,
                     {name: "Go Back", value: "back" },
-                ];
+                ]
             })
             .then((answer) => {
                 if (answer.departmentId === "back") {
@@ -647,7 +637,7 @@ function viewTotaUtilizedBudgetOfDeparrment() {
                 type: "list",
                 name: "deparmtentId",
                 message: 
-                    "Which department do you want to calculate the total salary for?";
+                    "Which department do you want to calculate the total salary for?",
                 choices: departmentChoices,
             })
             .then((answer) => {
