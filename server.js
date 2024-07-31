@@ -1,5 +1,6 @@
 const inquirer = require("inquirer");
 const cfonts = require('cfonts');
+const connection = require('./config/connection')
 
 // connect to the database
 connection.connect((err) => {

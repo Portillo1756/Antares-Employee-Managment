@@ -1,14 +1,14 @@
-DROP DATABASE IF EXITS employeeTracker_db;
+DROP DATABASE IF EXISTS employeeTracker_db;
 CREATE DATABASE employeeTracker_db;
-USE employeeTracker_db;
+-- USE employeeTracker_db;
 
 CREATE TABLE departments (
-    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMERY KEY,
     departments_name VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE roles (
-    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMERY KEY,
     title VARCHAR(255),
     SALARY DECIMAL(10,2),
     departments_id INT,
@@ -18,7 +18,7 @@ CREATE TABLE roles (
     );
 
     CREATE TABLE employee (
-        id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+        id SERIAL PRIMERY KEY,
         first_name VARCHAR(30) NOT NULL,
         last_name VARCHAR(30) NOT NULL,
         role_id INT,
