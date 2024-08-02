@@ -9,7 +9,7 @@ VALUES
 ('Customer Relations'),
 ('Research and Development'),
 ('Legal'),
-('Maintenance'),
+('Maintenance');
 
 INSERT INTO role (title, salary, department_id)
 VALUES
@@ -22,7 +22,7 @@ VALUES
 ('Customer Relations Manager', 65000.00, 7),
 ('Research & Development Manager', 100000.00, 8),
 ('Legal Manager', 120000.00, 9),
-('Maintenance Manager', 74000, 10),
+('Maintenance Manager', 74000, 10);
 
 INSERT INTO employee (first_name, last_name, role_id, manager_id)
 VALUES

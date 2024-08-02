@@ -636,7 +636,7 @@ function viewTotaUtilizedBudgetOfDeparrment() {
         inquirer
             .prompt({
                 type: "list",
-                name: "deparmtentId",
+                name: "departmentId",
                 message: 
                     "Which department do you want to calculate the total salary for?",
                 choices: departmentChoices,
