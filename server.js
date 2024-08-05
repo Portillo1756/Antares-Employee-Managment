@@ -11,9 +11,9 @@ connection.connect((err) => {
 });
 
 // function to start the app of CFONT
-cfonts.say('Antares SQL Employee Tracker', {
+cfonts.say('Antares Employee Tracker', {
     font: 'block',                  //define the font face
-    align: 'left',                  //define text aligment
+    align: 'center',                  //define text aligment
     color: ['blue'],                //define all colors
     background: 'transparent',      //define the background color, you can also use 'backgeound color'
     letterSpacing: 1,               //define letter spacing
@@ -118,7 +118,7 @@ function viewAllRoles() {
 }
 
 //  function to view all employees
-function viewAllEmployees() {;
+function viewAllEmployees() {
     const query = `
     SELECT e.id, e.first_name, e.last_name, r.title, d.depatment_name, r.salary, CONCAT(m.first_name, ' ', m.last_name) AS manager_name
     FROM employee e
