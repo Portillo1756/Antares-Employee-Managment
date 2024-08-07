@@ -1,5 +1,5 @@
 const inquirer = require("inquirer");
-const cfonts = require('cfonts');
+const cfonts = require ('cfonts');
 const connection = require('./config/connection')
 
 // connect to the database
@@ -144,7 +144,12 @@ function addDepartment() {
         })
         .then((answer) => {
             console.log(answer.name);
-            const query = `INSERT INTO department (department_name) VALUES ("${answer.name}")`;
+            // const newDepartment = answer.name
+            //     connection.query('INSERT INTO department (department_name) VALUES($1)',
+            //         [newDepartment], (error, department) =>{
+            //     if(error) throw error;
+            //     console.log(`\nThe department ${newDepartment} has been added successfully `);
+            const query = `INSERT INTO department (department_name) VALUES ('${answer.name}')`;
             connection.query(query, (err) => {
                 if (err) throw err;
                 console.log(`Added department ${answer.name} to the database!`);
@@ -152,7 +157,7 @@ function addDepartment() {
                 start();
                 console.log(answer.name);
             });
-        });
+        })
     }
 
 function addRole() {
@@ -167,7 +172,7 @@ function addRole() {
                 message: "Enter the title of the new role:",
             },
             {
-                type: "type",
+                type: "input",
                 name: "salary",
                 message: "Enter the salary of the new role:",
             },
@@ -175,7 +180,7 @@ function addRole() {
                 type: "list",
                 name: "department",
                 message: "Select the department for the new role:",
-                choices: res.map(
+                choices: res.rows.map(
                     (department) => department.department_name
                 ),
             },
@@ -208,27 +213,27 @@ function addRole() {
 // function to add an employee
 function addEmployee() {
     //  retrieve list of role form the database
-    connection.query ("SELECT id, title FROM role", (error, result) => {
+    connection.query ("SELECT id, title FROM role", (error, res) => {
         if (error) {
             console.error(error);
             return;
         }
 
-        const role = result.map(({ id, title }) => ({
+        const role = res.rows.map(({ id, title }) => ({
             name: title,
             value: id,
         }));
 
         // retrieve list of employee from the database to use as managers
         connection.query(
-            'SELECT id, CONCAT(first_name, " ", last_name) AS name FROM employee',
-            (error, result) => {
+            `SELECT id, CONCAT(first_name, ' ', last_name) AS name FROM employee`,
+            (error, res) => {
                 if (error) {
                     console.error(error);
                     return;
                 }
 
-                const manager = result.map(({ id, name }) => ({
+                const manager = res.rows.map(({ id, name }) => ({
                     name,
                     value: id,
                 }));
@@ -247,10 +252,13 @@ function addEmployee() {
                         message: "Enter the employee's last name:",
                     },
                     {
-                        type: "input",
+                        type: "list",
                         name: "roleId",
                         message: "Select the employee role:",
-                        choices: role,
+                        choices: [
+                            { name: "none", values: null },
+                            ...role,
+                        ],
                     },
                     {
                         type: "list",
@@ -265,14 +273,8 @@ function addEmployee() {
                 .then((answer) => {
                     // insert the employee into the database
                     const sql = 
-                        "INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)";
-                    const values =[
-                        answer.firstName,
-                        answer.lastName,
-                        answer.roleId,
-                        answer.managerId,
-                    ];
-                    connection.query(sql, values, (error) => {
+                        `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ( '${answer.firstName}', '${answer.lastName}', '${answer.roleId}', '${answer.managerId}')`;
+                    connection.query(sql, (error, res) => {
                         if (error) {
                             console.error(error);
                             return;
@@ -304,15 +306,15 @@ function addManager() {
                     type: "list",
                     name: "department",
                     message: "Select the department:",
-                    choices: resDepartment.map(
-                        (department) => department.department.department_name
+                    choices: resDepartment.rows.map(
+                        (department) => department.department_name
                     ),
                 },
                 {
                     type: "list",
                     name: "employee",
                     message: "Select the employee to add a manager to:",
-                    choices: resEmployee.map(
+                    choices: resEmployee.rows.map(
                         (employee) =>
                             `${employee.first_name} ${employee.last_name}`
                     ),
@@ -321,36 +323,35 @@ function addManager() {
                     type: "list",
                     name: "manager",
                     message: "Select the employee manager:",
-                    choices: resEmployee.map(
+                    choices: resEmployee.rows.map(
                         (employee) =>
                             `${employee.first_name} ${employee.last_name}`
                     ),
                 },
             ])
-            .then((answers) => {
-                const department = resDepartment.find(
+            .then((answer) => {
+                const department = resDepartment.rows.find(
                     (department) =>
-                        department.department_name === answers.department
+                        department.department_name === answer.department
                 );
-                const employee = resEmployee.find(
+                const employee = resEmployee.rows.find(
                     (employee) =>
                         `${employee.first_name} ${employee.last_name}` ===
-                        answers.employee
+                        answer.employee
                 );
-                const manager = resEmployee.find(
+                const manager = resEmployee.rows.find(
                     (employee) =>
                         `${employee.first_name} ${employee.last_name}` ===
-                        answers.manager 
+                        answer.manager 
                 );
                 const query =
-                    "UPDATE employee SET manager_id = ? WHERE id = ? AND role_id IN (SELECT id FROM role WHERE department_id = ?)";
+                    `UPDATE employee SET manager_id = '${manager.id}' WHERE id = '${employee.id}' AND role_id IN (SELECT id FROM role WHERE department_id = '${department.id}')`;
                 connection.query(
                     query,
-                    [manager.id, employee.id, department.id],
                     (err, res) => {
                         if (err) throw err;
                         console.log(
-                            `add manager ${manager.first_name} ${manager.last_name} to employee ${employee.first_name} ${employee.last_name} in department ${department.department_name}!`
+                            `added manager ${manager.first_name} ${manager.last_name} to employee ${employee.first_name} ${employee.last_name} in department ${department.department_name}!`
                         );
                         // restart the application
                         start();
@@ -376,7 +377,7 @@ function updateEmployeeRole() {
                         type: "list",
                         name: "employee",
                         message: "Select the employee to update:",
-                        choices: resEmployee.map(
+                        choices: resEmployee.rows.map(
                             (employee) =>
                                 `${employee.first_name} ${employee.last_name}`
                         ),
@@ -385,24 +386,22 @@ function updateEmployeeRole() {
                         type: "list",
                         name: "role",
                         message: "Select the new role:",
-                        choices: resRole.map((role) => role.title),
+                        choices: resRole.rows.map((role) => role.title),
                     },
                 ])
                 .then((answer) => {
-                    const employee = resEmployee.find(
+                    const employee = resEmployee.rows.find(
                         (employee) =>
                             `${employee.first_name} ${employee.last_name}` ===
                             answer.employee
                     );
-                    const role = resRole.find(
+                    const role = resRole.rows.find(
                     (role) => role.title === answer.role 
                     );
                     const query =
-                        "UPDATE employee SET role_id = ? WHERE id = ?";
+                        `UPDATE employee SET role_id = '${role.id}' WHERE id = '${employee.id}'`;
                     connection.query(
                         query,
-
-                        [role.id, employee.id],
                         (err, res) => {
                             console.log(
                                 `Update ${employee.first_name} ${employee.last_name}'s role to ${role.title} in the database!`
@@ -472,13 +471,13 @@ function viewEmployeeByDepartment() {
     const query = 
         "SELECT department.department_name, employee.first_name, employee.last_name FROM employee INNER JOIN role ON employee.role_id = role.id INNER JOIN department ON role.department_id = department.id ORDER BY department.department_name ASC";
 
-        connection.query(query(query, (err, res) => {
+        connection.query(query, (err, res) => {
             if (err) throw err;
-            console.log("|nEmployee by department:");
-            console.table(res);
+            console.log("\nEmployee by department:");
+            console.table(res.rows);
             // restart the application
             start();
-        }));
+        });
 }
 // function to DELETE department role employee
 function deleteDepartmentRoleEmployee() {
@@ -598,8 +597,8 @@ function deleteDepartment() {
                 message: "which department do you want to delete?",
                 choices: [
                     ... departmentChoices,
-                    {name: "Go Back", value: "back" },
-                ]
+                    { name: "Go Back", value: "back" },
+                ],
             })
             .then((answer) => {
                 if (answer.departmentId === "back") {
