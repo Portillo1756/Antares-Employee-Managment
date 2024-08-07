@@ -182,11 +182,11 @@ function addRole() {
                 message: "Select the department for the new role:",
                 choices: res.rows.map(
                     (department) => department.department_name
-                ),
+                )
             },
         ])
         .then((answer) => {
-            const department = res.find(
+            const department = res.rows.find(
                 (department) => department.name === answer.department
             );
             const query = "INSERT INTO role SET ?";
@@ -440,7 +440,7 @@ function viewEmployeeByManager() {
             if (err) throw err;
 
             // group employee by manager
-            const employeeByManager = res.reduce((acc, cur) => {
+            const employeeByManager = res.rows.reduce((acc, cur) => {
                 const managerName = cur.manager_name;
                 if (acc[managerName]) {
                     acc[managerName].push(curl);
@@ -511,7 +511,7 @@ function deleteEmployee() {
     const query = "SELECT * FROM employee";
     connection.query(query, (err, res) => {
         if (err) throw err;
-        const employeeList = res.map((employee) => ({
+        const employeeList = res.rows.map((employee) => ({
             name: `${employee.first_name} ${employee.last_name}`,
             value: employee.id,
         }));
@@ -548,7 +548,7 @@ function deleteRole() {
     connection.query(query, (err, res) => {
         if (err) throw err;
         // map through the retrieved role to create an array of choices
-        const choices = res.map((role) => ({
+        const choices = res.rows.map((role) => ({
             name: `${role.title} (${role.id}) - $(role.salary)`,
             value: role.id,
         }));
@@ -585,7 +585,7 @@ function deleteDepartment() {
     const query = "SELECT * FROM department";
     connection.query(query, (err, res) => {
         if (err) throw err;
-        const departmentChoices = res.map((department) => ({
+        const departmentChoices = res.rows.map((department) => ({
             name: department.department_name,
             value: department.id,
         }));
@@ -627,7 +627,7 @@ function viewTotalUtilizedBudgetOfDepartment() {
     const query = "SELECT * FROM department";
     connection.query(query, (err, res) => {
         if (err) throw err;
-        const departmentChoices = res.map((department) => ({
+        const departmentChoices = res.rows.map((department) => ({
             name: department.department_name,
             value: department.id,
         }));
